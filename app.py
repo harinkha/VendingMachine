@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db. sqlite')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -15,33 +15,6 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
 app.app_context().push()
-
-
-@app.route('/addmachine', methods=['POST'])
-def add_machine():
-    name = request.json['name']
-    location = request.json['location']
-
-    new_machine = Machine(name, location)
-
-    db.session.add(new_machine)
-    db.session.commit()
-
-    return MachineSchema().jsonify(new_machine)
-
-
-@app.route('/addproduct', methods=['POST'])
-def add_product_to_machine():
-    name = request.json['name']
-    quantity = request.json['quantity']
-    stored=request.json['stored']
-
-    new_product = Products(name, quantity, stored)
-
-    db.session.add(new_product)
-    db.session.commit()
-
-    return ProductSchema().jsonify(new_product)
 
 
 class Machine(db.Model):
@@ -79,3 +52,52 @@ class ProductSchema(ma.Schema):
 # Run Server
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+@app.route('/addmachine', methods=['POST'])
+def add_machine():
+    name = request.json['name']
+    location = request.json['location']
+
+    new_machine = Machine(name, location)
+
+    db.session.add(new_machine)
+    db.session.commit()
+
+    return MachineSchema().jsonify(new_machine)
+
+
+@app.route('/addproduct', methods=['POST'])
+def add_product_to_machine():
+    name = request.json['name']
+    quantity = request.json['quantity']
+    stored = request.json['stored']
+
+    new_product = Products(name, quantity, stored)
+
+    db.session.add(new_product)
+    db.session.commit()
+
+    return ProductSchema().jsonify(new_product)
+
+
+@app.route('/getmachines', methods=['GET'])
+def get_all_machines():
+    all_machines = Machine.query.all()
+    result = MachineSchema().dump(all_machines)
+    return jsonify(result)
+
+
+@app.route('/getproducts', methods=['GET'])
+def get_all_products():
+    all_products = Products.query.all()
+    result = ProductSchema().dump(all_products)
+    return jsonify(result)
+
+
+@app.route('/products/<machine>', methods=['POST'])
+def check_products_of_machine(machine):
+    products = Products.query.filter_by(stored=machine).all()
+    return ProductSchema().jsonify(products)
+
+
