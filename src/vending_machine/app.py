@@ -1,14 +1,19 @@
-from flask import Flask, request
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
-import os
+"""
+This module contains the main application logic for the vending machine.
+"""
 
-# Init app
+import os
+from flask import Flask, request
+from flask_marshmallow import Marshmallow
+from flask_sqlalchemy import SQLAlchemy
+
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
+    basedir, "../../db.sqlite"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
@@ -29,7 +34,7 @@ class Machine(db.Model):
 
 class MachineSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'location')
+        fields = ("id", "name", "location")
 
 
 class Products(db.Model):
@@ -46,7 +51,7 @@ class Products(db.Model):
 
 class ProductSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'quantity', 'stored')
+        fields = ("id", "name", "quantity", "stored")
 
 
 product_schema = ProductSchema()
@@ -57,10 +62,11 @@ machines_schema = MachineSchema(many=True)
 
 # Machine CRUD
 
-@app.route('/addmachine', methods=['POST'])
+
+@app.route("/addmachine", methods=["POST"])
 def add_machine():
-    name = request.json['name']
-    location = request.json['location']
+    name = request.json["name"]
+    location = request.json["location"]
 
     new_machine = Machine(name, location)
 
@@ -70,18 +76,18 @@ def add_machine():
     return machine_schema.jsonify(new_machine)
 
 
-@app.route('/machine/<id>', methods=['GET'])
+@app.route("/machine/<id>", methods=["GET"])
 def get_machine(id):
     machine = Machine.query.get(id)
     return machine_schema.jsonify(machine)
 
 
-@app.route('/machine/<id>', methods=['PUT'])
+@app.route("/machine/<id>", methods=["PUT"])
 def update_machine(id):
     machine = Machine.query.get(id)
 
-    name = request.json['name']
-    location = request.json['location']
+    name = request.json["name"]
+    location = request.json["location"]
 
     machine.name = name
     machine.location = location
@@ -91,7 +97,7 @@ def update_machine(id):
     return machine_schema.jsonify(machine)
 
 
-@app.route('/machine/<id>', methods=['DELETE'])
+@app.route("/machine/<id>", methods=["DELETE"])
 def delete_machine(id):
     machine = Machine.query.get(id)
     db.session.delete(machine)
@@ -100,7 +106,7 @@ def delete_machine(id):
     return machine_schema.jsonify(machine)
 
 
-@app.route('/getmachines', methods=['GET'])
+@app.route("/getmachines", methods=["GET"])
 def get_all_machines():
     all_machines = Machine.query.all()
     return machines_schema.jsonify(all_machines)
@@ -108,11 +114,12 @@ def get_all_machines():
 
 # Products CRUD
 
-@app.route('/addproduct', methods=['POST'])
+
+@app.route("/addproduct", methods=["POST"])
 def add_product():
-    name = request.json['name']
-    quantity = request.json['quantity']
-    stored = request.json['stored']
+    name = request.json["name"]
+    quantity = request.json["quantity"]
+    stored = request.json["stored"]
 
     new_product = Products(name, quantity, stored)
 
@@ -122,18 +129,18 @@ def add_product():
     return product_schema.jsonify(new_product)
 
 
-@app.route('/product/<id>', methods=['GET'])
+@app.route("/product/<id>", methods=["GET"])
 def get_product(id):
     product = Products.query.get(id)
     return product_schema.jsonify(product)
 
 
-@app.route('/product/<id>', methods=['PUT'])
+@app.route("/product/<id>", methods=["PUT"])
 def update_product(id):
     product = Products.query.get(id)
-    name = request.json['name']
-    quantity = request.json['quantity']
-    stored = request.json['stored']
+    name = request.json["name"]
+    quantity = request.json["quantity"]
+    stored = request.json["stored"]
 
     product.name = name
     product.quantity = quantity
@@ -144,7 +151,7 @@ def update_product(id):
     return product_schema.jsonify(product)
 
 
-@app.route('/product/<id>', methods=['DELETE'])
+@app.route("/product/<id>", methods=["DELETE"])
 def delete_product(id):
     product = Products.query.get(id)
     db.session.delete(product)
@@ -153,19 +160,19 @@ def delete_product(id):
     return product_schema.jsonify(product)
 
 
-@app.route('/getproducts', methods=['GET'])
+@app.route("/getproducts", methods=["GET"])
 def get_all_products():
     all_products = Products.query.all()
     return products_schema.jsonify(all_products)
 
 
-@app.route('/products/<machine>', methods=['POST'])
+@app.route("/products/<machine>", methods=["POST"])
 def check_products_of_machine(machine):
     products = Products.query.filter_by(stored=machine).all()
     return products_schema.jsonify(products)
 
 
 # Run Server
-if __name__ == '__main__':
+if __name__ == "__main__":
     db.create_all()
     app.run(debug=True)

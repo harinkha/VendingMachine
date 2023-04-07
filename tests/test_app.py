@@ -1,13 +1,14 @@
 import json
+
 import pytest
 
-from app import app, db, Machine, Products
+from src.vending_machine.app import Machine, Products, app, db
 
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+    app.config["TESTING"] = True
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
 
     with app.test_client() as client:
         with app.app_context():
@@ -17,9 +18,11 @@ def client():
 
 
 def test_add_machine(client):
-    response = client.post('/addmachine', json={'name': 'Machine A', 'location': 'Location A'})
+    response = client.post(
+        "/addmachine", json={"name": "Machine A", "location": "Location A"}
+    )
     assert response.status_code == 200
-    assert b'Machine A' in response.data
+    assert b"Machine A" in response.data
 
 
 # Add the remaining test cases here
@@ -28,9 +31,9 @@ def test_get_machine(client):
     db.session.add(machine)
     db.session.commit()
 
-    response = client.get(f'/machine/{machine.id}')
+    response = client.get(f"/machine/{machine.id}")
     assert response.status_code == 200
-    assert b'Machine A' in response.data
+    assert b"Machine A" in response.data
 
 
 def test_update_machine(client):
@@ -39,9 +42,13 @@ def test_update_machine(client):
     db.session.commit()
 
     updated_machine = {"name": "Machine A Updated", "location": "Location A Updated"}
-    response = client.put(f'/machine/{machine.id}', data=json.dumps(updated_machine), content_type='application/json')
+    response = client.put(
+        f"/machine/{machine.id}",
+        data=json.dumps(updated_machine),
+        content_type="application/json",
+    )
     assert response.status_code == 200
-    assert b'Machine A Updated' in response.data
+    assert b"Machine A Updated" in response.data
 
 
 def test_delete_machine(client):
@@ -49,9 +56,9 @@ def test_delete_machine(client):
     db.session.add(machine)
     db.session.commit()
 
-    response = client.delete(f'/machine/{machine.id}')
+    response = client.delete(f"/machine/{machine.id}")
     assert response.status_code == 200
-    assert b'Machine A' in response.data
+    assert b"Machine A" in response.data
 
 
 def test_get_all_machines(client):
@@ -59,16 +66,18 @@ def test_get_all_machines(client):
     db.session.add(machine)
     db.session.commit()
 
-    response = client.get('/getmachines')
+    response = client.get("/getmachines")
     assert response.status_code == 200
-    assert b'Machine A' in response.data
+    assert b"Machine A" in response.data
 
 
 def test_add_product(client):
     product = {"name": "Product A", "quantity": 10, "stored": "Machine A"}
-    response = client.post('/addproduct', data=json.dumps(product), content_type='application/json')
+    response = client.post(
+        "/addproduct", data=json.dumps(product), content_type="application/json"
+    )
     assert response.status_code == 200
-    assert b'Product A' in response.data
+    assert b"Product A" in response.data
 
 
 def test_get_product(client):
@@ -76,9 +85,9 @@ def test_get_product(client):
     db.session.add(product)
     db.session.commit()
 
-    response = client.get(f'/product/{product.id}')
+    response = client.get(f"/product/{product.id}")
     assert response.status_code == 200
-    assert b'Product A' in response.data
+    assert b"Product A" in response.data
 
 
 def test_update_product(client):
@@ -86,10 +95,18 @@ def test_update_product(client):
     db.session.add(product)
     db.session.commit()
 
-    updated_product = {"name": "Product A Updated", "quantity": 20, "stored": "Machine B"}
-    response = client.put(f'/product/{product.id}', data=json.dumps(updated_product), content_type='application/json')
+    updated_product = {
+        "name": "Product A Updated",
+        "quantity": 20,
+        "stored": "Machine B",
+    }
+    response = client.put(
+        f"/product/{product.id}",
+        data=json.dumps(updated_product),
+        content_type="application/json",
+    )
     assert response.status_code == 200
-    assert b'Product A Updated' in response.data
+    assert b"Product A Updated" in response.data
 
 
 def test_delete_product(client):
@@ -97,9 +114,9 @@ def test_delete_product(client):
     db.session.add(product)
     db.session.commit()
 
-    response = client.delete(f'/product/{product.id}')
+    response = client.delete(f"/product/{product.id}")
     assert response.status_code == 200
-    assert b'Product A' in response.data
+    assert b"Product A" in response.data
 
 
 def test_get_all_products(client):
@@ -107,9 +124,9 @@ def test_get_all_products(client):
     db.session.add(product)
     db.session.commit()
 
-    response = client.get('/getproducts')
+    response = client.get("/getproducts")
     assert response.status_code == 200
-    assert b'Product A' in response.data
+    assert b"Product A" in response.data
 
 
 def test_check_products_of_machine(client):
@@ -121,8 +138,10 @@ def test_check_products_of_machine(client):
     db.session.add(product_c)
     db.session.commit()
 
-    response = client.post('/products/Machine A', data=json.dumps({}), content_type='application/json')
+    response = client.post(
+        "/products/Machine A", data=json.dumps({}), content_type="application/json"
+    )
     assert response.status_code == 200
-    assert b'Product A' in response.data
-    assert b'Product C' in response.data
-    assert b'Product B' not in response.data
+    assert b"Product A" in response.data
+    assert b"Product C" in response.data
+    assert b"Product B" not in response.data
