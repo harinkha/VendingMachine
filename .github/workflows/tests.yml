@@ -85,7 +85,7 @@ jobs:
 
   build-and-upload:
     needs: [test-and-coverage]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
