@@ -1,8 +1,12 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import json
 
 import pytest
 
-from ..src.app import Machine, Products, app, db
+from app import Machine, Products, app, db
 
 
 @pytest.fixture
