@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from app import Machine, Products, app, db
+from vending_machine.app import Machine, Products, app, db
 
 
 @pytest.fixture
