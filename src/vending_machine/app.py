@@ -1,8 +1,8 @@
-"""
-This module contains the main application logic for the vending machine.
-"""
+"""This module contains the main application logic for the vending machine."""
+
 
 import os
+
 from flask import Flask, request
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
