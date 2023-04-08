@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "homework1"
+name =  "vending_machine"
 version = "0.1.0"
 description = ""
 authors = ["harinkha <simarkhanijou@gmail.com>"]
