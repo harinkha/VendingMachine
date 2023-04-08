@@ -139,6 +139,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: coverage-report
+          
+      - name: Upload coverage report to SonarCloud
+        run: cp coverage.xml ${{ github.workspace }}
 
       - name: SonarQube Scan
         uses: sonarsource/sonarcloud-github-action@master
