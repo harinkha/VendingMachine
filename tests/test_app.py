@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from src.app import Machine, Products, app, db
+from ..src.app import Machine, Products, app, db
 
 
 @pytest.fixture
