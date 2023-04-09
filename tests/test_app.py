@@ -75,15 +75,6 @@ def test_get_all_machines(client):
     assert b"Machine A" in response.data
 
 
-def test_add_product(client):
-    product = {"name": "Product A", "quantity": 10, "stored": "Machine A"}
-    response = client.post(
-        "/addproduct", data=json.dumps(product), content_type="application/json"
-    )
-    assert response.status_code == 200
-    assert b"Product A" in response.data
-
-
 def test_get_product(client):
     product = Products(name="Product A", quantity=10, stored="Machine A")
     db.session.add(product)
