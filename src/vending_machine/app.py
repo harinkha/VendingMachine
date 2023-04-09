@@ -134,7 +134,7 @@ def get_all_machines():
 
 
 @app.route("/addproduct", methods=["POST"])
-def add_product_to_machine():
+def add_product():
     name = request.json["name"]
     quantity = request.json["quantity"]
     stored = request.json["stored"]
