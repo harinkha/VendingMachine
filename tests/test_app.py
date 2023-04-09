@@ -170,7 +170,7 @@ def test_purchase_product(setup_teardown):
         assert updated_product.quantity == 5
 
 
-def test_purchase_product_insufficient_stock(setup_teardown):
+def test_purchase_product_insufficient_stock(client):
     with app.test_client() as client:
         # Add a product to test with
         product = Products(name="Sample Product", quantity=10, stored="Test Machine")
