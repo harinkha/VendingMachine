@@ -1,7 +1,3 @@
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import json
 
 import pytest
@@ -140,3 +136,53 @@ def test_check_products_of_machine(client):
     assert b"Product A" in response.data
     assert b"Product C" in response.data
     assert b"Product B" not in response.data
+
+
+def test_add_product_to_machine(setup_teardown):
+    with app.test_client() as client:
+        response = client.post(
+            "/addproduct",
+            json={"name": "Sample Product", "quantity": 10, "stored": "Test Machine"},
+        )
+
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["name"] == "Sample Product"
+        assert data["quantity"] == 10
+        assert data["stored"] == "Test Machine"
+
+
+def test_purchase_product(setup_teardown):
+    with app.test_client() as client:
+        # Add a product to test with
+        product = Products(name="Sample Product", quantity=10, stored="Test Machine")
+        db.session.add(product)
+        db.session.commit()
+
+        response = client.post(f"/purchaseproduct/{product.id}/5")
+
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["message"] == "Product purchased"
+
+        # Check if the quantity was updated correctly
+        updated_product = Products.query.get(product.id)
+        assert updated_product.quantity == 5
+
+
+def test_purchase_product_insufficient_stock(setup_teardown):
+    with app.test_client() as client:
+        # Add a product to test with
+        product = Products(name="Sample Product", quantity=10, stored="Test Machine")
+        db.session.add(product)
+        db.session.commit()
+
+        response = client.post(f"/purchaseproduct/{product.id}/15")
+
+        assert response.status_code == 400
+        data = response.get_json()
+        assert data["message"] == "Insufficient stock"
+
+        # Check if the quantity was not updated
+        updated_product = Products.query.get(product.id)
+        assert updated_product.quantity == 10
