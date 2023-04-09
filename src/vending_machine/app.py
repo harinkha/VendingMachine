@@ -1,9 +1,8 @@
 """This module contains the main application logic for the vending machine."""
 
-
 import os
 
-from flask import Flask, request
+from flask import Flask, jsonify, request
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 
@@ -60,7 +59,26 @@ machine_schema = MachineSchema()
 machines_schema = MachineSchema(many=True)
 
 
-# Machine CRUD
+class StockHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
+    machine_id = db.Column(db.Integer, db.ForeignKey("machine.id"))
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+    quantity = db.Column(db.Integer)
+
+    def __init__(self, product_id, machine_id, quantity):
+        self.product_id = product_id
+        self.machine_id = machine_id
+        self.quantity = quantity
+
+
+class StockHistorySchema(ma.Schema):
+    class Meta:
+        fields = ("id", "product_id", "machine_id", "timestamp", "quantity")
+
+
+stock_history_schema = StockHistorySchema()
+stock_history_schema_many = StockHistorySchema(many=True)
 
 
 @app.route("/addmachine", methods=["POST"])
@@ -116,14 +134,28 @@ def get_all_machines():
 
 
 @app.route("/addproduct", methods=["POST"])
-def add_product():
+def add_product_to_machine():
     name = request.json["name"]
     quantity = request.json["quantity"]
     stored = request.json["stored"]
 
-    new_product = Products(name, quantity, stored)
+    existing_product = Products.query.filter_by(name=name, stored=stored).first()
 
-    db.session.add(new_product)
+    if existing_product:
+        existing_product.quantity = quantity
+        db.session.commit()
+        product_id = existing_product.id
+    else:
+        new_product = Products(name, quantity, stored)
+        db.session.add(new_product)
+        db.session.commit()
+        product_id = new_product.id
+
+    machine = Machine.query.filter_by(name=stored).first()
+    new_stock_history = StockHistory(
+        product_id=product_id, machine_id=machine.id, quantity=quantity
+    )
+    db.session.add(new_stock_history)
     db.session.commit()
 
     return product_schema.jsonify(new_product)
@@ -170,6 +202,42 @@ def get_all_products():
 def check_products_of_machine(machine):
     products = Products.query.filter_by(stored=machine).all()
     return products_schema.jsonify(products)
+
+
+@app.route("/purchaseproduct/<product_id>/<int:quantity>", methods=["POST"])
+def purchase_product(product_id, quantity):
+    product = Products.query.get(product_id)
+    if not product:
+        return jsonify({"message": "Product not found"}), 404
+
+    machine = Machine.query.filter_by(name=product.stored).first()
+    if not machine:
+        return jsonify({"message": "Machine not found"}), 404
+
+    if product.quantity < quantity:
+        return jsonify({"message": "Insufficient stock"}), 400
+
+    product.quantity -= quantity
+    db.session.add(product)
+
+    new_stock_history = StockHistory(
+        product_id=product.id, machine_id=machine.id, quantity=product.quantity
+    )
+    db.session.add(new_stock_history)
+
+    db.session.commit()
+
+    return jsonify({"message": "Product purchased"})
+
+
+@app.route("/stockhistory/<machine_id>/<product_id>", methods=["GET"])
+def get_stock_history(machine_id, product_id):
+    history = (
+        StockHistory.query.filter_by(machine_id=machine_id, product_id=product_id)
+        .order_by(StockHistory.timestamp.asc())
+        .all()
+    )
+    return stock_history_schema_many.jsonify(history)
 
 
 # Run Server
